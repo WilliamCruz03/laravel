@@ -19,8 +19,8 @@
         <!-- Menú de navegación -->
         <div>
             <a href="{{ route('ventas.clientes.index') }}" class="btn btn-light me-2">Catálogo de Clientes</a>
-            <a href="{{ route('ventas.cotizaciones.index') }}" class="btn btn-light me-2">Cotizaciones</a>
-            <a href="{{ route('ventas.reportes.index') }}" class="btn btn-light me-2">Reportes</a>
+            <a href="{{ route('ventas.articulos.index') }}" class="btn btn-light me-2">Articulos</a>
+            <a href="{{ route('ventas.pedidos.index') }}" class="btn btn-light me-2">Pedidos</a>
             <button class="btn btn-light">Administrador</button>
         </div>
     </nav>

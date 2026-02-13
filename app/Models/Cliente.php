@@ -15,6 +15,11 @@ protected $fillable = [
     ];
 
     public $timestamps = false;
+
+    public function pedidos()
+    {
+        return $this->hasMany(Pedido::class);
+    }
 }
 
 

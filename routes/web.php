@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClientesController;
 use App\Http\Controllers\CotizacionesController;
 use App\Http\Controllers\ReportesController;
+use App\Http\Controllers\PedidoController;
+use App\Http\Controllers\ArticuloController;
 
 
 
@@ -30,6 +32,11 @@ Route::prefix('ventas')->name('ventas.')->group(function () {
         Route::delete('/{id}', 'destroy')->name('destroy');  // Eliminar cliente
         });
     
+
+    // Artículos y Pedidos
+    Route::resource('articulos', ArticuloController::class)->names('articulos');
+    Route::resource('pedidos', PedidoController::class)->names('pedidos');
+
     // Cotizaciones
     Route::controller(CotizacionesController::class)->prefix('cotizaciones')->name('cotizaciones.')->group(function () {
         Route::get('/', 'index')->name('index');

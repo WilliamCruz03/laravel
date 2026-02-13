@@ -29,6 +29,7 @@
                 @endif
 
 
+                    <!-- Filtro de búsqueda -->
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <form action="{{ route('ventas.clientes.index') }}" method="GET" class="d-flex">
