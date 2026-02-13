@@ -1,9 +1,12 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\Pedido;
 use App\Models\Cliente;
+use App\Models\Articulo;
 use Illuminate\Http\Request;
+
 
 class PedidoController extends Controller
 {
@@ -23,7 +26,8 @@ class PedidoController extends Controller
      public function create()
     {
         $clientes = Cliente::all();
-        return view('pedidos.create', compact('clientes'));
+        $articulos = Articulo::all();
+        return view('pedidos.create', compact('clientes', 'articulos'));
     }
 
     /**
@@ -55,10 +59,13 @@ class PedidoController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Pedido $pedido)
+    public function edit($id)
     {
+        $pedido = Pedido::with('detalles.articulo')->findOrFail($id);
         $clientes = Cliente::all();
-        return view('pedidos.edit', compact('pedido', 'clientes'));
+        $articulos = Articulo::all();
+
+        return view('pedidos.edit', compact('pedido','clientes','articulos'));
     }
 
     /**
@@ -72,14 +79,17 @@ class PedidoController extends Controller
             'total' => 'required|numeric',
             'estado' => 'required|string',
         ]);
+
+        return redirect()->route('ventas.pedidos.index')->with('success', 'Pedido actualizado');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Pedido $pedido)
+    public function destroy($id)
     {
         //
+        $pedido = Pedido::findOrFail($id);
         $pedido->delete();
         return redirect()->route('ventas.pedidos.index')->with('success', 'Pedido eliminado');
     }

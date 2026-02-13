@@ -2,11 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClientesController;
-use App\Http\Controllers\CotizacionesController;
-use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\ArticuloController;
 
+use App\Http\Controllers\CotizacionesController;
+use App\Http\Controllers\ReportesController;
 
 
 // Ruta principal Ventas
@@ -33,17 +33,17 @@ Route::prefix('ventas')->name('ventas.')->group(function () {
         });
     
 
-    // Artículos y Pedidos
-    Route::resource('articulos', ArticuloController::class)->names('articulos');
-    Route::resource('pedidos', PedidoController::class)->names('pedidos');
+        // Artículos y Pedidos
+        Route::resource('articulos', ArticuloController::class)->names('articulos');
+        Route::resource('pedidos', PedidoController::class)->names('pedidos');
 
-    // Cotizaciones
-    Route::controller(CotizacionesController::class)->prefix('cotizaciones')->name('cotizaciones.')->group(function () {
-        Route::get('/', 'index')->name('index');
-    });
-    
-    // Reportes
-    Route::controller(ReportesController::class)->prefix('reportes')->name('reportes.')->group(function () {
-        Route::get('/', 'index')->name('index');
-    });
+        // Cotizaciones
+        Route::controller(CotizacionesController::class)->prefix('cotizaciones')->name('cotizaciones.')->group(function () {
+            Route::get('/', 'index')->name('index');
+        });
+        
+        // Reportes
+        Route::controller(ReportesController::class)->prefix('reportes')->name('reportes.')->group(function () {
+            Route::get('/', 'index')->name('index');
+        });
 });

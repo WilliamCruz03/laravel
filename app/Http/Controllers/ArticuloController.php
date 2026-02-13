@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Articulo;
 use Illuminate\Http\Request;
 
 class ArticuloController extends Controller
@@ -12,6 +13,8 @@ class ArticuloController extends Controller
     public function index()
     {
         //
+        $articulos = Articulo::all();
+        return view('articulos.index', compact('articulos'));
     }
 
     /**
@@ -20,6 +23,7 @@ class ArticuloController extends Controller
     public function create()
     {
         //
+        return view('articulos.create');
     }
 
     /**
@@ -28,6 +32,16 @@ class ArticuloController extends Controller
     public function store(Request $request)
     {
         //
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:255',
+            'descripcion' => 'nullable|string',
+            'precio' => 'required|numeric',
+            'stock' => 'required|integer|min:0',
+        ]);
+
+        Articulo::create($validated);
+        
+        return redirect()->route('ventas.articulos.index')->with('success', 'Artículo creado exitosamente.');
     }
 
     /**
@@ -44,21 +58,38 @@ class ArticuloController extends Controller
     public function edit(string $id)
     {
         //
+        $articulo = Articulo::findOrFail($id);
+        return view('articulos.edit', compact('articulo'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
         //
+        $articulo = Articulo::findOrFail($id);
+
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:255',
+            'descripcion' => 'nullable|string',
+            'precio' => 'required|numeric|min:0',
+            'stock' => 'required|integer|min:0',
+        ]);
+
+        $articulo->update($validated);
+        return redirect()->route('ventas.articulos.index')->with('success', 'Artículo actualizado exitosamente.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($id)
     {
         //
+        $articulo = Articulo::findOrFail($id);
+        $articulo->delete();
+
+        return redirect()->route('ventas.articulos.index')->with('success', 'Artículo eliminado exitosamente.');
     }
 }
