@@ -4,13 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Cliente extends Model
+class Cotizaciones extends Model
 {
-
+    
 protected $fillable = [
-    'nombre',
-    'email',
-    'telefono',
-    'direccion'
-    ];    
+    'cliente_id',
+    'fecha',
+    'total'
+    ];
 }

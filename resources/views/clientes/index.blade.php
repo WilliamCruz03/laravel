@@ -19,38 +19,37 @@
     </nav>
     
     <div class="container mt-4">
-        <h1>Listado de Clientes</h1>
+        <h1 class="mb-4">Listado de Clientes</h1>
         
-        <table class="table-responsive">
-            <thead >
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Email</th>
-                    <th>Teléfono</th>
-                    <th>Dirección</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-
-               @foreach ($clientes as $cliente)
-               <tr>
-                    <td>{{ $cliente['id'] }}</td>
-                    <td>{{ $cliente['nombre'] }}</td>
-                    <td>{{ $cliente['email'] }}</td>
-                    <td>{{ $cliente['telefono'] }}</td>
-                    <td>{{ $cliente['direccion'] }}</td>
-                    
-
-                    <td>                        
-                        <button class="btn btn-sm btn-primary">Editar</button>
-                        <button class="btn btn-sm btn-danger">Eliminar</button>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>Teléfono</th>
+                        <th>Dirección</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($clientes as $cliente)
+                    <tr>
+                        <td>{{ $cliente[0] }}</td>
+                        <td>{{ $cliente[1] }}</td>
+                        <td>{{ $cliente[2] }}</td>
+                        <td>{{ $cliente[3] }}</td>
+                        <td>{{ $cliente[4] }}</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-primary">Editar</button>
+                            <button class="btn btn-sm btn-danger">Eliminar</button>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Si no hay clientes -->
