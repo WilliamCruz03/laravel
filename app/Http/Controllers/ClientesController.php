@@ -7,9 +7,16 @@ use App\Models\Cliente;
 
 class ClientesController extends Controller
 {
-    public function index()
+
+
+    public function index(Request $request)
     {
-        $clientes = Cliente::all(); 
+        $search = $request->get('search');
+
+        $clientes = Cliente::when($search, function ($query, $search) {
+            return $query->where('nombre', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+        })->get();
 
         return view('clientes.index', compact('clientes'));
     }

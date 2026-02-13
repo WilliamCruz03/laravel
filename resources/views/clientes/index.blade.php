@@ -28,10 +28,24 @@
                     </div>
                 @endif
 
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <form action="{{ route('ventas.clientes.index') }}" method="GET" class="d-flex">
+                            <input type="text" name="search" class="form-control me-2" placeholder="Buscar por nombre o email..." value="{{ request('search') }}">
+                            <button type="submit" class="btn btn-primary">Buscar</button>
+                            @if(request('search'))
+                                <a href="{{ route('ventas.clientes.index') }}" class="btn btn-secondary ms-2">Limpiar</a>
+                            @endif
+                        </form>
+                    </div>
+                </div>
+
                 <div class="card shadow">
                     <div class="card-header bg-white">
                         <h3 class="card-title mb-0">Listado de Clientes</h3>
                     </div>
+
                     <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-hover table-bordered mb-0">
