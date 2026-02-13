@@ -12,5 +12,9 @@ protected $fillable = [
     'email',
     'telefono',
     'direccion'
-    ];    
+    ];
+
+    public $timestamps = false;
 }
+
+

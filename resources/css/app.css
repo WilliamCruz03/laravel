@@ -11,4 +11,15 @@ body {
     justify-content: space-between;
     align-items: center;
     color: white;
+    
 }
+
+.form-container {
+            max-width: 800px; /* Puedes cambiarlo a 100% si quieres que ocupe todo el ancho */
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card-header-custom {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }

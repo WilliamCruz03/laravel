@@ -9,12 +9,7 @@ class ClientesController extends Controller
 {
     public function index()
     {
-        $clientes = [
-            [1, 'Cliente 1', 'cliente1@example.com', '123-456-7890', 'Calle Principal, Ciudad, País'],
-            [2, 'Cliente 2', 'cliente2@example.com', '098-765-4321', 'Calle Secundaria, Ciudad, País'],
-            [3, 'Cliente 3', 'cliente3@example.com', '555-123-4567', 'Calle Terciaria, Ciudad, País'],
-            [4, 'Cliente 4', 'cliente4@example.com', '555-987-6543', 'Calle Cuarta, Ciudad, País']
-        ];
+        $clientes = Cliente::all(); 
 
         return view('clientes.index', compact('clientes'));
     }
@@ -22,5 +17,50 @@ class ClientesController extends Controller
     public function create()
     {
         return view('clientes.create');
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:255',
+            'email' => 'required|email|unique:clientes,email',
+            'telefono' => 'nullable|string|max:20',
+            'direccion' => 'nullable|string|max:255'
+        ]);
+
+        Cliente::create($validated);
+
+        return redirect()->route('ventas.clientes.index')->with('success', 'Cliente creado exitosamente.');
+    }
+
+    public function edit($id)
+    {
+        $cliente = Cliente::findOrFail($id);
+        return view('clientes.edit', compact('cliente'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $cliente = Cliente::findOrFail($id);
+
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:255',
+            'email' => 'required|email|unique:clientes,email,' . $cliente->id, //ignora este email
+            'telefono' => 'nullable|string|max:20',
+            'direccion' => 'nullable|string|max:255'
+        ]);
+
+        $cliente->update($validated);
+
+        return redirect()->route('ventas.clientes.index')->with('success', 'Cliente actualizado exitosamente.');
+    }
+
+    public function destroy($id)
+    {
+        $cliente = Cliente::findOrFail($id);
+        $cliente->delete();
+
+        return redirect()->route('ventas.clientes.index')
+                        ->with('success', 'Cliente eliminado correctamente.');
     }
 }

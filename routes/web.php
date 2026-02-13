@@ -24,7 +24,11 @@ Route::prefix('ventas')->name('ventas.')->group(function () {
     Route::controller(ClientesController::class)->prefix('clientes')->name('clientes.')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/crear', 'create')->name('create');
-    });
+        Route::post('/', 'store')->name('store');
+        Route::get('/{id}/editar', 'edit')->name('edit');   // Muestra formulario de edición
+        Route::put('/{id}', 'update')->name('update');      // Procesa la actualización
+        Route::delete('/{id}', 'destroy')->name('destroy');  // Eliminar cliente
+        });
     
     // Cotizaciones
     Route::controller(CotizacionesController::class)->prefix('cotizaciones')->name('cotizaciones.')->group(function () {

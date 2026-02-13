@@ -17,46 +17,112 @@
             </div>
         </div>
     </nav>
-    
+
     <div class="container mt-4">
-        <h1 class="mb-4">Listado de Clientes</h1>
-        
-        <div class="table-responsive">
-            <table class="table table-hover table-bordered">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Email</th>
-                        <th>Teléfono</th>
-                        <th>Dirección</th>
-                        <th class="text-center">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($clientes as $cliente)
-                    <tr>
-                        <td>{{ $cliente[0] }}</td>
-                        <td>{{ $cliente[1] }}</td>
-                        <td>{{ $cliente[2] }}</td>
-                        <td>{{ $cliente[3] }}</td>
-                        <td>{{ $cliente[4] }}</td>
-                        <td class="text-center">
-                            <button class="btn btn-sm btn-primary">Editar</button>
-                            <button class="btn btn-sm btn-danger">Eliminar</button>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+        <div class="row justify-content-center">
+            <div class="col-12">
+                @if(session('success'))
+                    <div class="alert alert-success alert-dismissible fade show">
+                        {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+
+                <div class="card shadow">
+                    <div class="card-header bg-white">
+                        <h3 class="card-title mb-0">Listado de Clientes</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nombre</th>
+                                        <th>Email</th>
+                                        <th>Teléfono</th>
+                                        <th>Dirección</th>
+                                        <th class="text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($clientes as $cliente)
+                                    <tr>
+                                        <td>{{ $cliente->id }}</td>
+                                        <td>{{ $cliente->nombre }}</td>
+                                        <td>{{ $cliente->email }}</td>
+                                        <td>{{ $cliente->telefono }}</td>
+                                        <td>{{ $cliente->direccion }}</td>
+                                        <td class="text-center">
+                                            <a href="{{ route('ventas.clientes.edit', $cliente->id) }}" class="btn btn-sm btn-primary">Editar</a>
+                                            <button type="button" class="btn btn-sm btn-danger" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#eliminarModal"
+                                                    data-id="{{ $cliente->id }}"
+                                                    data-nombre="{{ $cliente->nombre }}">
+                                                Eliminar
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">
+                                            <div class="alert alert-info mb-0">
+                                                No hay clientes registrados.
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer text-muted text-end">
+                        Total de clientes: <span class="badge bg-primary">{{ count($clientes) }}</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Si no hay clientes -->
-    @if (count($clientes) == 0)
-        <div class="alert alert-info text-center">
-            No hay clientes registrados.
+    <!-- Modal de confirmación de eliminación -->
+    <div class="modal fade" id="eliminarModal" tabindex="-1" aria-labelledby="eliminarModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="eliminarModalLabel">Confirmar eliminación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    ¿Estás seguro de que deseas eliminar al cliente <strong id="nombreCliente"></strong>?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form id="formEliminar" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </form>
+                </div>
+            </div>
         </div>
-    @endif
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const eliminarModal = document.getElementById('eliminarModal');
+            eliminarModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const clienteId = button.getAttribute('data-id');
+                const clienteNombre = button.getAttribute('data-nombre');
+
+                document.getElementById('nombreCliente').textContent = clienteNombre;
+
+                const form = document.getElementById('formEliminar');
+                form.action = '{{ url("ventas/clientes") }}/' + clienteId;
+            });
+        });
+    </script>
 </body>
 </html>
