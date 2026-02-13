@@ -33,7 +33,12 @@
 
                             <div class="mb-4">
                                 <label for="nombre" class="form-label fw-bold">Nombre Completo <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control form-control-lg @error('nombre') is-invalid @enderror" id="nombre" name="nombre" value="{{ old('nombre', $cliente->nombre) }}" placeholder="Ej: Juan Pérez" required>
+                                <input type="text" class="form-control form-control-lg @error('nombre') is-invalid @enderror" 
+                                       id="nombre" name="nombre" value="{{ old('nombre', $cliente->nombre) }}" 
+                                       pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+" 
+                                       title="Solo se permiten letras y espacios"
+                                       oninput="this.value = this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, '')" 
+                                       placeholder="Ej: Juan Pérez" required>
                                 @error('nombre')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -49,7 +54,12 @@
 
                             <div class="mb-4">
                                 <label for="telefono" class="form-label fw-bold">Número de Teléfono</label>
-                                <input type="text" class="form-control form-control-lg @error('telefono') is-invalid @enderror" id="telefono" name="telefono" value="{{ old('telefono', $cliente->telefono) }}" placeholder="Ej: 55-1234-5678">
+                                <input type="tel" class="form-control form-control-lg @error('telefono') is-invalid @enderror" 
+                                       id="telefono" name="telefono" value="{{ old('telefono', $cliente->telefono) }}" 
+                                       pattern="[0-9\s\-\(\)]+" 
+                                       title="Solo se permiten números, espacios, guiones y paréntesis"
+                                       oninput="this.value = this.value.replace(/[^0-9\s\-\(\)]/g, '')"
+                                       placeholder="Ej: 55-1234-5678">
                                 @error('telefono')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror

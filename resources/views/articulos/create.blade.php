@@ -27,7 +27,7 @@
                             @csrf
                             <div class="mb-4">
                                 <label for="nombre" class="form-label fw-bold">Nombre <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control form-control-lg @error('nombre') is-invalid @enderror" id="nombre" name="nombre" value="{{ old('nombre') }}" placeholder="Ej: Laptop" required>
+                                <input type="text" class="form-control form-control-lg @error('nombre') is-invalid @enderror" id="nombre" name="nombre" value="{{ old('nombre') }}" placeholder="Ej: Paracetamol" required>
                                 @error('nombre')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror

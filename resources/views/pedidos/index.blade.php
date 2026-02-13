@@ -20,10 +20,19 @@
 
     <div class="container mt-4">
         @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show">
+            <div class="alert alert-success alert-dismissible fade show" role="alert" id="success-alert">
                 {{ session('success') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
+            <script>
+                setTimeout(function() {
+                    let alert = document.getElementById('success-alert');
+                    if (alert) {
+                        let bsAlert = new bootstrap.Alert(alert);
+                        bsAlert.close();
+                    }
+                }, 3000);
+            </script>
         @endif
 
         <h1 class="mb-4">Listado de Pedidos</h1>

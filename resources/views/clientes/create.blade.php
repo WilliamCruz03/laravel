@@ -44,6 +44,9 @@
                                        id="nombre" 
                                        name="nombre" 
                                        value="{{ old('nombre') }}" 
+                                       pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+"
+                                       title="El nombre solo puede contener letras y espacios"}"
+                                       oninput="this.value = this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, '')" 
                                        placeholder="Ej: Juan Pérez"
                                        required>
                                 @error('nombre')
@@ -73,7 +76,10 @@
                                        class="form-control form-control-lg @error('telefono') is-invalid @enderror" 
                                        id="telefono" 
                                        name="telefono" 
-                                       value="{{ old('telefono') }}" 
+                                       value="{{ old('telefono') }}"
+                                       pattern="[0-9\s\-\(\)]+" 
+                                       title="Solo se permiten números, espacios, guiones y paréntesis"
+                                       oninput="this.value = this.value.replace(/[^0-9\s\-\(\)]/g, '')"
                                        placeholder="Ej: 5555-234-5678">
                                 @error('telefono')
                                     <div class="invalid-feedback">{{ $message }}</div>

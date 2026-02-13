@@ -29,9 +29,9 @@ class ClientesController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nombre' => 'required|string|max:255',
+            'nombre' => 'required|string|max:255|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/',
             'email' => 'required|email|unique:clientes,email',
-            'telefono' => 'nullable|string|max:20',
+            'telefono' => 'nullable|string|max:20|regex:/^[0-9\s\-\(\)]+$/',
             'direccion' => 'nullable|string|max:255'
         ]);
 
@@ -51,9 +51,9 @@ class ClientesController extends Controller
         $cliente = Cliente::findOrFail($id);
 
         $validated = $request->validate([
-            'nombre' => 'required|string|max:255',
+            'nombre' => 'required|string|max:255|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/',
             'email' => 'required|email|unique:clientes,email,' . $cliente->id, //ignora este email
-            'telefono' => 'nullable|string|max:20',
+            'telefono' => 'nullable|string|max:20|regex:/^[0-9\s\-\(\)]+$/',
             'direccion' => 'nullable|string|max:255'
         ]);
 
