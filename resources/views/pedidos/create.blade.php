@@ -275,7 +275,13 @@
             document.getElementById('formNuevoCliente').reset();
         });
 
-        
+            document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.altKey && e.key === 'n') {
+            e.preventDefault();
+            const modal = new bootstrap.Modal(document.getElementById('modalNuevoCliente'));
+            modal.show();
+        }
+        });
     </script>
 
         <!-- Modal Nuevo Cliente -->
