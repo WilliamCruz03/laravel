@@ -83,7 +83,8 @@ class ArticuloController extends Controller
         ]);
 
         $articulo->update($validated);
-        return redirect()->route('ventas.articulos.index')->with('success', 'Artículo actualizado exitosamente.');
+        return redirect()->route('ventas.articulos.index')
+                 ->with('success', 'Artículo actualizado exitosamente.');
     }
 
     /**
@@ -95,6 +96,7 @@ class ArticuloController extends Controller
         $articulo = Articulo::findOrFail($id);
         $articulo->delete();
 
-        return redirect()->route('ventas.articulos.index')->with('success', 'Artículo eliminado exitosamente.');
+        return redirect()->route('ventas.articulos.index')
+                 ->with('success', 'Artículo eliminado exitosamente.');
     }
 }

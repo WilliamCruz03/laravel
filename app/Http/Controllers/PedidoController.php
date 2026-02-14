@@ -36,67 +36,65 @@ class PedidoController extends Controller
      */
 
 
-public function store(Request $request)
-{
-    // Validar los datos principales
-    $validated = $request->validate([
-        'cliente_id' => 'required|exists:clientes,id',
-        'fecha'      => 'required|date',
-        'estado'     => 'required|string|in:pendiente,pagado,cancelado',
-    ]);
-
-    // Validar que existan detalles y que cada uno tenga los campos necesarios
-    $detalles = $request->input('detalles', []);
-    if (empty($detalles)) {
-        return back()->withErrors(['detalles' => 'Debe agregar al menos un artículo al pedido.'])->withInput();
-    }
-
-    // Validar cada detalle
-    foreach ($detalles as $index => $detalle) {
-        $request->validate([
-            "detalles.{$index}.articulo_id"   => 'required|exists:articulos,id',
-            "detalles.{$index}.cantidad"       => 'required|integer|min:1',
-            "detalles.{$index}.precio_unitario" => 'required|numeric|min:0',
-        ]);
-    }
-
-    // Usar transacción para asegurar integridad
-    DB::beginTransaction();
-    try {
-        // Crear el pedido
-        $pedido = Pedido::create([
-            'cliente_id' => $validated['cliente_id'],
-            'fecha'      => $validated['fecha'],
-            'estado'     => $validated['estado'],
-            'total'      => 0, // temporal, luego lo actualizamos
-        ]);
-
-        $totalPedido = 0;
-
-        // Crear cada detalle
-        foreach ($detalles as $detalle) {
-            $subtotal = $detalle['cantidad'] * $detalle['precio_unitario'];
-            $pedido->detalles()->create([
-                'articulo_id'     => $detalle['articulo_id'],
-                'cantidad'        => $detalle['cantidad'],
-                'precio_unitario' => $detalle['precio_unitario'],
-                'subtotal'        => $subtotal,
+    public function store(Request $request)
+    {
+        try {
+            // Validar los datos principales
+            $validated = $request->validate([
+                'cliente_id' => 'required|exists:clientes,id',
+                'fecha'      => 'required|date',
+                'estado'     => 'required|string|in:pendiente,pagado,cancelado',
             ]);
-            $totalPedido += $subtotal;
+
+            $detalles = $request->input('detalles', []);
+            if (empty($detalles)) {
+                return back()->withErrors(['detalles' => 'Debe agregar al menos un artículo.'])->withInput();
+            }
+
+            // Validar cada detalle
+            foreach ($detalles as $index => $detalle) {
+                $request->validate([
+                    "detalles.{$index}.articulo_id"   => 'required|exists:articulos,id',
+                    "detalles.{$index}.cantidad"       => 'required|integer|min:1',
+                    "detalles.{$index}.precio_unitario" => 'required|numeric|min:0',
+                ]);
+            }
+
+            DB::beginTransaction();
+
+            // Crear pedido
+            $pedido = Pedido::create([
+                'cliente_id' => $validated['cliente_id'],
+                'fecha'      => $validated['fecha'],
+                'estado'     => $validated['estado'],
+                'total'      => 0,
+            ]);
+
+            $total = 0;
+            foreach ($detalles as $detalle) {
+                $subtotal = $detalle['cantidad'] * $detalle['precio_unitario'];
+                $pedido->detalles()->create([
+                    'articulo_id'     => $detalle['articulo_id'],
+                    'cantidad'        => $detalle['cantidad'],
+                    'precio_unitario' => $detalle['precio_unitario'],
+                    'subtotal'        => $subtotal,
+                ]);
+                $total += $subtotal;
+            }
+
+            $pedido->update(['total' => $total]);
+
+            DB::commit();
+
+            return redirect()->route('ventas.pedidos.index')
+                            ->with('success', 'Pedido creado exitosamente.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            // 👇 Esto te mostrará el error exacto en pantalla
+            return back()->withErrors(['error' => 'Error al guardar: ' . $e->getMessage()])->withInput();
         }
-
-        // Actualizar el total del pedido
-        $pedido->update(['total' => $totalPedido]);
-
-        DB::commit();
-
-        return redirect()->route('ventas.pedidos.index')
-                         ->with('success', 'Pedido creado exitosamente.');
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return back()->withErrors(['error' => 'Ocurrió un error al guardar el pedido: ' . $e->getMessage()])->withInput();
     }
-}
     
 
     /**

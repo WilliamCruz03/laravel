@@ -23,6 +23,18 @@
                         <h3 class="card-title mb-0">Registrar Pedido</h3>
                     </div>
                     <div class="card-body">
+
+                        @if($errors->any())
+                            <div class="alert alert-danger alert-dismissible fade show">
+                                <ul class="mb-0">
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        @endif
+
                         <form action="{{ route('ventas.pedidos.store') }}" method="POST">
                             @csrf
                             <div class="row">
