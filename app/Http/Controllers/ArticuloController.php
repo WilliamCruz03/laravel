@@ -10,10 +10,15 @@ class ArticuloController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
-        $articulos = Articulo::all();
+        $search = $request->get('search');
+
+        $articulos = Articulo::when($search, function ($query, $search) {
+            return $query->where('nombre', 'like', "%{$search}%")
+                        ->orWhere('descripcion', 'like', "%{$search}%");
+        })->get();
+
         return view('articulos.index', compact('articulos'));
     }
 

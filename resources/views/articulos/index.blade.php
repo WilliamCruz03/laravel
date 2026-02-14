@@ -35,6 +35,18 @@
             </script>
         @endif
 
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <form action="{{ route('ventas.articulos.index') }}" method="GET" class="d-flex">
+                    <input type="text" name="search" class="form-control me-2" placeholder="Buscar por nombre o descripción..." value="{{ request('search') }}">
+                    <button type="submit" class="btn btn-primary">Buscar</button>
+                    @if(request('search'))
+                        <a href="{{ route('ventas.articulos.index') }}" class="btn btn-secondary ms-2">Limpiar</a>
+                    @endif
+                </form>
+            </div>
+        </div>
+
         <div class="row justify-content-center">
             <div class="col-12">
                 <div class="card shadow">
