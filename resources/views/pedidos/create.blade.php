@@ -39,7 +39,23 @@
                             @csrf
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    <label for="cliente_id" class="form-label fw-bold">Cliente <span class="text-danger">*</span></label>
+                                        <label for="cliente_id" class="form-label fw-bold">Cliente <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <select name="cliente_id" id="cliente_id" class="form-select @error('cliente_id') is-invalid @enderror" required>
+                                                <option value="">Seleccionar cliente</option>
+                                                @foreach($clientes as $cliente)
+                                                    <option value="{{ $cliente->id }}" {{ old('cliente_id') == $cliente->id ? 'selected' : '' }}>{{ $cliente->nombre }}</option>
+                                                @endforeach
+                                            </select>
+                                            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoCliente">
+                                                + Nuevo
+                                            </button>
+                                        </div>
+                                        @error('cliente_id')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
                                     <select name="cliente_id" id="cliente_id" class="form-select @error('cliente_id') is-invalid @enderror" required>
                                         <option value="">Seleccionar cliente</option>
                                         @foreach($clientes as $cliente)
@@ -201,6 +217,102 @@
             });
             document.getElementById('total').textContent = total.toFixed(2);
         }
+
+
+        // Modal para nuevo cliente en pedidos
+        const modalNuevoCliente = document.getElementById('modalNuevoCliente');
+        const btnGuardarCliente = document.getElementById('guardarClienteModal');
+
+        btnGuardarCliente.addEventListener('click', function() {
+            const form = document.getElementById('formNuevoCliente');
+            const formData = new FormData(form);
+
+            fetch('{{ route("ventas.clientes.store") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Cerrar modal
+                    const modal = bootstrap.Modal.getInstance(modalNuevoCliente);
+                    modal.hide();
+
+                    // Agregar nuevo cliente al select y seleccionarlo
+                    const select = document.getElementById('cliente_id');
+                    const option = document.createElement('option');
+                    option.value = data.cliente.id;
+                    option.text = data.cliente.nombre;
+                    option.selected = true;
+                    select.appendChild(option);
+
+                    // Limpiar formulario del modal
+                    form.reset();
+
+                    // Mostrar toast de éxito
+                    mostrarToast(data.message, 'success');
+                } else {
+                    // Si hay errores de validación, mostrarlos (asumiendo que data trae los errores)
+                    let errores = '';
+                    for (let campo in data.errors) {
+                        errores += data.errors[campo].join('\n') + '\n';
+                    }
+                    alert('Errores:\n' + errores);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarToast('Error de conexión', 'danger');
+            });
+        });
+
+        // Al cerrar el modal, limpiar posibles mensajes de error
+        modalNuevoCliente.addEventListener('hidden.bs.modal', function () {
+            document.getElementById('formNuevoCliente').reset();
+        });
+
+        
     </script>
+
+        <!-- Modal Nuevo Cliente -->
+    <div class="modal fade" id="modalNuevoCliente" tabindex="-1" aria-labelledby="modalNuevoClienteLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalNuevoClienteLabel">Registrar Nuevo Cliente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formNuevoCliente">
+                        @csrf
+                        <div class="mb-3">
+                            <label for="modal_nombre" class="form-label">Nombre <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="modal_nombre" name="nombre" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="modal_email" class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="modal_email" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="modal_telefono" class="form-label">Teléfono</label>
+                            <input type="text" class="form-control" id="modal_telefono" name="telefono">
+                        </div>
+                        <div class="mb-3">
+                            <label for="modal_direccion" class="form-label">Dirección</label>
+                            <input type="text" class="form-control" id="modal_direccion" name="direccion">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="guardarClienteModal">Guardar Cliente</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

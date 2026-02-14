@@ -29,15 +29,24 @@ class ClientesController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nombre' => 'required|string|max:255|regex:/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/',
-            'email' => 'required|email|unique:clientes,email',
-            'telefono' => 'nullable|string|max:20|regex:/^[0-9\s\-\(\)]+$/',
-            'direccion' => 'nullable|string|max:255'
+            'nombre'    => 'required|string|max:100',
+            'email'     => 'required|email|max:255|unique:clientes,email',
+            'telefono'  => 'nullable|string|max:20',
+            'direccion' => 'nullable|string|max:255',
         ]);
 
-        Cliente::create($validated);
+        $cliente = Cliente::create($validated);
 
-        return redirect()->route('ventas.clientes.index')->with('success', 'Cliente creado exitosamente.');
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'cliente' => $cliente,
+                'message' => 'Cliente creado exitosamente.'
+            ]);
+        }
+
+        return redirect()->route('ventas.clientes.index')
+                        ->with('success', 'Cliente creado exitosamente.');
     }
 
     public function edit($id)
