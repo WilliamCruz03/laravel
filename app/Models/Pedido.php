@@ -10,7 +10,8 @@ class Pedido extends Model
         'cliente_id',
         'fecha',
         'total',
-        'estado'
+        'estado',
+        'motivo_retraso'
     ];
 
     // Relación con Cliente

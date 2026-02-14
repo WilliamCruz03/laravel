@@ -50,11 +50,17 @@
                                     <label for="estado" class="form-label fw-bold">Estado</label>
                                     <select name="estado" id="estado" class="form-select">
                                         <option value="pendiente" {{ old('estado', $pedido->estado) == 'pendiente' ? 'selected' : '' }}>Pendiente</option>
-                                        <option value="pagado" {{ old('estado', $pedido->estado) == 'pagado' ? 'selected' : '' }}>Pagado</option>
-                                        <option value="cancelado" {{ old('estado', $pedido->estado) == 'cancelado' ? 'selected' : '' }}>Cancelado</option>
+                                        <option value="despachado" {{ old('estado', $pedido->estado) == 'despachado' ? 'selected' : '' }}>Despachado</option>
+                                        <option value="en_camino" {{ old('estado', $pedido->estado) == 'en_camino' ? 'selected' : '' }}>En Camino</option>
+                                        <option value="entregado" {{ old('estado', $pedido->estado) == 'entregado' ? 'selected' : '' }}>Entregado</option>
+                                        <option value="retrasado" {{ old('estado', $pedido->estado) == 'retrasado' ? 'selected' : '' }}>Retrasado</option>
                                     </select>
                                 </div>
-                            </div>
+                                </div>
+                                    <div class="mb-3">
+                                    <label for="motivo_retraso" class="form-label fw-bold">Motivo de retraso (solo si aplica)</label>
+                                    <input type="text" class="form-control" id="motivo_retraso" name="motivo_retraso" value="{{ old('motivo_retraso', $pedido->motivo_retraso) }}">
+                                </div>
 
                             <hr>
                             <h4 class="mb-3">Detalles del pedido</h4>

@@ -36,7 +36,8 @@ Route::prefix('ventas')->name('ventas.')->group(function () {
         // Artículos y Pedidos
         Route::resource('articulos', ArticuloController::class)->names('articulos');
         Route::resource('pedidos', PedidoController::class)->names('pedidos');
-
+        Route::post('/pedidos/{id}/estado', [PedidoController::class, 'updateEstado'])->name('pedidos.updateEstado');
+        
         // Cotizaciones
         Route::controller(CotizacionesController::class)->prefix('cotizaciones')->name('cotizaciones.')->group(function () {
             Route::get('/', 'index')->name('index');

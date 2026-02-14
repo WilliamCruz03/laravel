@@ -128,8 +128,21 @@ class PedidoController extends Controller
         $validated = $request->validate([
             'cliente_id' => 'required|exists:clientes,id',
             'fecha'      => 'required|date',
-            'estado'     => 'required|string|in:pendiente,pagado,cancelado',
+            'estado' => 'required|in:pendiente,despachado,en_camino,entregado,retrasado',
+            'motivo_retraso' => 'nullable|string|max:255'
         ]);
+
+        $pedido->estado = $request->estado;
+        if ($request->estado == 'retrasado') {
+            $pedido->motivo_retraso = $request->motivo_retraso;
+        } else {
+            $pedido->motivo_retraso = null;
+        }
+        $pedido->save();
+
+            return redirect()->route('ventas.pedidos.index')
+                     ->with('success', 'Pedido actualizado correctamente.');
+        
 
         $detalles = $request->input('detalles', []);
         if (empty($detalles)) {
@@ -181,14 +194,30 @@ class PedidoController extends Controller
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
+    public function updateEstado(Request $request, $id)
     {
-        //
-        $pedido = Pedido::findOrFail($id);
-        $pedido->delete();
-        return redirect()->route('ventas.pedidos.index')->with('success', 'Pedido eliminado');
+        try {
+            $pedido = Pedido::findOrFail($id);
+
+            $request->validate([
+                'estado' => 'required|in:pendiente,despachado,en_camino,entregado,retrasado',
+                'motivo_retraso' => 'nullable|string|max:255'
+            ]);
+
+            // Actualizar estado
+            $pedido->estado = $request->estado;
+
+            // Solo actualizar el motivo si se proporciona (especialmente para estado retrasado)
+            if ($request->has('motivo_retraso')) {
+                $pedido->motivo_retraso = $request->motivo_retraso;
+            }
+            // Si no se envía motivo, mantener el existente
+
+            $pedido->save();
+
+            return response()->json(['success' => true, 'message' => 'Estado actualizado']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 }

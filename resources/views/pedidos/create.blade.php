@@ -61,8 +61,10 @@
                                     <label for="estado" class="form-label fw-bold">Estado</label>
                                     <select name="estado" id="estado" class="form-select">
                                         <option value="pendiente" {{ old('estado') == 'pendiente' ? 'selected' : '' }}>Pendiente</option>
-                                        <option value="pagado" {{ old('estado') == 'pagado' ? 'selected' : '' }}>Pagado</option>
-                                        <option value="cancelado" {{ old('estado') == 'cancelado' ? 'selected' : '' }}>Cancelado</option>
+                                        <option value="despachado" {{ old('estado') == 'despachado' ? 'selected' : '' }}>Despachado</option>
+                                        <option value="en_camino" {{ old('estado') == 'en_camino' ? 'selected' : '' }}>En camino</option>
+                                        <option value="entregado" {{ old('estado') == 'entregado' ? 'selected' : '' }}>Entregado</option>
+                                        <option value="retrasado" {{ old('estado') == 'retrasado' ? 'selected' : '' }}>Retrasado</option>
                                     </select>
                                 </div>
                             </div>
