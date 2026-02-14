@@ -298,5 +298,17 @@
         });
     });
 </script>
+
+    <script>
+        //Atajos de Teclado
+        //Crear nuevo pedido
+        document.addEventListener('keydown', function(e) {
+            // Ctrl + N para nuevo pedido
+            if (e.ctrlKey && e.altKey && e.key === 'n') {
+                e.preventDefault();
+                window.location.href = '{{ route("ventas.pedidos.create") }}';
+            }
+        });
+    </script>
 </body>
 </html>

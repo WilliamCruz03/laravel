@@ -196,5 +196,19 @@
         // Inicializar total al cargar
         recalcularTotales();
     </script>
+
+    <script>
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey && e.key === 'Enter')) {
+                e.preventDefault();
+                document.querySelector('form').submit();
+            }
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                window.location.href = '{{ route("ventas.pedidos.index") }}';
+            }
+        });
+    </script>
+
 </body>
 </html>

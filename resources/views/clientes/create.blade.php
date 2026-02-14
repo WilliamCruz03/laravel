@@ -118,5 +118,22 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        //Atajos de Teclado
+    document.addEventListener('keydown', function(e) {
+        // Guardar con Ctrl+Enter
+        if ((e.ctrlKey && e.key === 'Enter')) {
+            e.preventDefault();
+            document.querySelector('form').submit();
+        }
+        // Cancelar con Escape
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            window.location.href = '{{ route("ventas.clientes.index") }}';
+        }
+    });
+    </script>
+
 </body>
 </html>

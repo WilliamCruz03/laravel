@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Cliente;
+use Illuminate\Support\Facades\Validator;
 
 class ClientesController extends Controller
 {
@@ -28,16 +29,26 @@ class ClientesController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'nombre'    => 'required|string|max:100',
             'email'     => 'required|email|max:255|unique:clientes,email',
             'telefono'  => 'nullable|string|max:20',
             'direccion' => 'nullable|string|max:255',
         ]);
 
-        $cliente = Cliente::create($validated);
+        if ($validator->fails()) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'errors'  => $validator->errors()
+                ], 422);
+            }
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
 
-        if ($request->ajax()) {
+        $cliente = Cliente::create($validator->validated());
+
+        if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'cliente' => $cliente,

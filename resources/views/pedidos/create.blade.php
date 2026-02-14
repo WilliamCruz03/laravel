@@ -8,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;"></div>
     <nav class="nav-farmacia">
         <div class="container-fluid">
             <span class="navbar-brand mb-0 h1">Crear Nuevo Pedido</span>
@@ -39,32 +40,23 @@
                             @csrf
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                        <label for="cliente_id" class="form-label fw-bold">Cliente <span class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <select name="cliente_id" id="cliente_id" class="form-select @error('cliente_id') is-invalid @enderror" required>
-                                                <option value="">Seleccionar cliente</option>
-                                                @foreach($clientes as $cliente)
-                                                    <option value="{{ $cliente->id }}" {{ old('cliente_id') == $cliente->id ? 'selected' : '' }}>{{ $cliente->nombre }}</option>
-                                                @endforeach
-                                            </select>
-                                            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoCliente">
-                                                + Nuevo
-                                            </button>
-                                        </div>
-                                        @error('cliente_id')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                    <label for="cliente_id" class="form-label fw-bold">Cliente <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <select name="cliente_id" id="cliente_id" class="form-select @error('cliente_id') is-invalid @enderror" required>
+                                            <option value="">Seleccionar cliente</option>
+                                            @foreach($clientes as $cliente)
+                                                <option value="{{ $cliente->id }}" {{ old('cliente_id') == $cliente->id ? 'selected' : '' }}>{{ $cliente->nombre }}</option>
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoCliente">
+                                            + Nuevo
+                                        </button>
                                     </div>
-
-                                    <select name="cliente_id" id="cliente_id" class="form-select @error('cliente_id') is-invalid @enderror" required>
-                                        <option value="">Seleccionar cliente</option>
-                                        @foreach($clientes as $cliente)
-                                            <option value="{{ $cliente->id }}" {{ old('cliente_id') == $cliente->id ? 'selected' : '' }}>{{ $cliente->nombre }}</option>
-                                        @endforeach
-                                    </select>
                                     @error('cliente_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
+                                </div>
+
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label for="fecha" class="form-label fw-bold">Fecha <span class="text-danger">*</span></label>
@@ -219,106 +211,259 @@
         }
 
 
-        // Modal para nuevo cliente en pedidos
-        const modalNuevoCliente = document.getElementById('modalNuevoCliente');
-        const btnGuardarCliente = document.getElementById('guardarClienteModal');
+            function mostrarToast(mensaje, tipo = 'success') {
+                const container = document.querySelector('.toast-container');
+                if (!container) return;
 
-        btnGuardarCliente.addEventListener('click', function() {
-            const form = document.getElementById('formNuevoCliente');
-            const formData = new FormData(form);
-
-            fetch('{{ route("ventas.clientes.store") }}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json',
-                },
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Cerrar modal
-                    const modal = bootstrap.Modal.getInstance(modalNuevoCliente);
-                    modal.hide();
-
-                    // Agregar nuevo cliente al select y seleccionarlo
-                    const select = document.getElementById('cliente_id');
-                    const option = document.createElement('option');
-                    option.value = data.cliente.id;
-                    option.text = data.cliente.nombre;
-                    option.selected = true;
-                    select.appendChild(option);
-
-                    // Limpiar formulario del modal
-                    form.reset();
-
-                    // Mostrar toast de éxito
-                    mostrarToast(data.message, 'success');
-                } else {
-                    // Si hay errores de validación, mostrarlos (asumiendo que data trae los errores)
-                    let errores = '';
-                    for (let campo in data.errors) {
-                        errores += data.errors[campo].join('\n') + '\n';
-                    }
-                    alert('Errores:\n' + errores);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                mostrarToast('Error de conexión', 'danger');
-            });
-        });
-
-        // Al cerrar el modal, limpiar posibles mensajes de error
-        modalNuevoCliente.addEventListener('hidden.bs.modal', function () {
-            document.getElementById('formNuevoCliente').reset();
-        });
-
-            document.addEventListener('keydown', function(e) {
-        if (e.ctrlKey && e.altKey && e.key === 'n') {
-            e.preventDefault();
-            const modal = new bootstrap.Modal(document.getElementById('modalNuevoCliente'));
-            modal.show();
-        }
-        });
+                const toastId = 'toast-' + Date.now();
+                const bgClass = tipo === 'success' ? 'bg-success text-white' : 'bg-danger text-white';
+                
+                const toastHtml = `
+                    <div id="${toastId}" class="toast align-items-center ${bgClass} border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="3000">
+                        <div class="d-flex">
+                            <div class="toast-body">${mensaje}</div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', toastHtml);
+                const toastElement = document.getElementById(toastId);
+                const toast = new bootstrap.Toast(toastElement);
+                toast.show();
+                toastElement.addEventListener('hidden.bs.toast', () => toastElement.remove());
+            }
     </script>
 
         <!-- Modal Nuevo Cliente -->
-    <div class="modal fade" id="modalNuevoCliente" tabindex="-1" aria-labelledby="modalNuevoClienteLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalNuevoClienteLabel">Registrar Nuevo Cliente</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="formNuevoCliente">
-                        @csrf
-                        <div class="mb-3">
-                            <label for="modal_nombre" class="form-label">Nombre <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="modal_nombre" name="nombre" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="modal_email" class="form-label">Email <span class="text-danger">*</span></label>
-                            <input type="email" class="form-control" id="modal_email" name="email" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="modal_telefono" class="form-label">Teléfono</label>
-                            <input type="text" class="form-control" id="modal_telefono" name="telefono">
-                        </div>
-                        <div class="mb-3">
-                            <label for="modal_direccion" class="form-label">Dirección</label>
-                            <input type="text" class="form-control" id="modal_direccion" name="direccion">
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="guardarClienteModal">Guardar Cliente</button>
+        <div class="modal fade" id="modalNuevoCliente" tabindex="-1" aria-labelledby="modalNuevoClienteLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalNuevoClienteLabel">Registrar Nuevo Cliente</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="formNuevoCliente">
+                            @csrf
+                            <div class="mb-3">
+                                <label for="modal_nombre" class="form-label">Nombre <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="modal_nombre" name="nombre" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="modal_email" class="form-label">Email <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="modal_email" name="email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="modal_telefono" class="form-label">Teléfono</label>
+                                <input type="text" class="form-control" id="modal_telefono" name="telefono">
+                            </div>
+                            <div class="mb-3">
+                                <label for="modal_direccion" class="form-label">Dirección</label>
+                                <input type="text" class="form-control" id="modal_direccion" name="direccion">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" id="guardarClienteModal">Guardar Cliente</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        // Función para mostrar toasts
+        function mostrarToast(mensaje, tipo = 'success') {
+            const container = document.querySelector('.toast-container');
+            if (!container) return;
+            const toastId = 'toast-' + Date.now();
+            const bgClass = tipo === 'success' ? 'bg-success text-white' : 'bg-danger text-white';
+            const toastHtml = `
+                <div id="${toastId}" class="toast align-items-center ${bgClass} border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="3000">
+                    <div class="d-flex">
+                        <div class="toast-body">${mensaje}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', toastHtml);
+            const toastElement = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+            toastElement.addEventListener('hidden.bs.toast', () => toastElement.remove());
+        }
+
+        // Elementos del modal
+        const modalNuevoCliente = document.getElementById('modalNuevoCliente');
+        const btnGuardarCliente = document.getElementById('guardarClienteModal');
+        const formNuevoCliente = document.getElementById('formNuevoCliente');
+        const selectCliente = document.getElementById('cliente_id'); // Asegurar que existe
+
+        // Función para limpiar backdrop y cerrar modal
+        function limpiarBackdrop() {
+            // Quitar todos los backdrops que hayan quedado
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            // Quitar clase que bloquea el scroll
+            document.body.classList.remove('modal-open');
+            // Restaurar estilos del body
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+
+        // Función para cerrar modal y limpiar
+        function cerrarModal() {
+            if (modalNuevoCliente) {
+                const modal = bootstrap.Modal.getInstance(modalNuevoCliente);
+                if (modal) {
+                    modal.hide();
+                } else {
+                    // Si no hay instancia, forzar cierre manual
+                    modalNuevoCliente.classList.remove('show');
+                    modalNuevoCliente.style.display = 'none';
+                }
+            }
+            limpiarBackdrop();
+        }
+
+        if (btnGuardarCliente && modalNuevoCliente && formNuevoCliente && selectCliente) {
+            btnGuardarCliente.addEventListener('click', function() {
+                const formData = new FormData(formNuevoCliente);
+                
+                // Deshabilitar botón
+                btnGuardarCliente.disabled = true;
+                btnGuardarCliente.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Guardando...';
+
+                fetch('{{ route("ventas.clientes.store") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                    body: formData
+                })
+                .then(async response => {
+                    const data = await response.json();
+                    if (!response.ok) {
+                        throw data;
+                    }
+                    return data;
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Agregar nuevo cliente al select y seleccionarlo
+                        const option = document.createElement('option');
+                        option.value = data.cliente.id;
+                        option.text = data.cliente.nombre;
+                        option.selected = true;
+                        selectCliente.appendChild(option);
+
+                        // Limpiar formulario del modal
+                        formNuevoCliente.reset();
+
+                        // Mostrar mensaje de éxito
+                        mostrarToast(data.message, 'success');
+                    } else {
+                        // Mostrar errores de validación
+                        let errores = '';
+                        if (data.errors) {
+                            for (let campo in data.errors) {
+                                errores += data.errors[campo].join('\n') + '\n';
+                            }
+                        } else {
+                            errores = 'Error desconocido';
+                        }
+                        mostrarToast('Errores:\n' + errores, 'danger');
+                    }
+                    // Cerrar modal pase lo que pase
+                    cerrarModal();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    let mensaje = 'Error de conexión';
+                    if (error.message) {
+                        mensaje = error.message;
+                    } else if (error.errors) {
+                        mensaje = Object.values(error.errors).flat().join('\n');
+                    } else if (typeof error === 'string') {
+                        mensaje = error;
+                    }
+                    mostrarToast('Error: ' + mensaje, 'danger');
+                    cerrarModal();
+                })
+                .finally(() => {
+                    // Restaurar botón
+                    btnGuardarCliente.disabled = false;
+                    btnGuardarCliente.innerHTML = 'Guardar Cliente';
+                });
+            });
+
+            // Al cerrar el modal por cualquier motivo, limpiar backdrop
+            modalNuevoCliente.addEventListener('hidden.bs.modal', function () {
+                formNuevoCliente.reset();
+                limpiarBackdrop();
+            });
+        } else {
+            console.error('Error: No se encontraron elementos del modal');
+        }
+
+        // Atajo de teclado
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.altKey && e.key === 'n') {
+                e.preventDefault();
+                const modal = new bootstrap.Modal(modalNuevoCliente);
+                modal.show();
+            }
+        });
+    });
+    </script>
+
+    <script>
+    // Atajos de Teclado
+    document.addEventListener('keydown', function(e) {
+        // Detectar si el modal de nuevo cliente está abierto
+        const modalNuevoCliente = document.getElementById('modalNuevoCliente');
+        const modalAbierto = modalNuevoCliente?.classList.contains('show');
+
+        // Guardar con Ctrl+Enter (solo si no hay modal abierto)
+        if (e.ctrlKey && e.key === 'Enter' && !modalAbierto) {
+            e.preventDefault();
+            document.querySelector('form').submit();
+        }
+
+        // Cancelar con Escape: si el modal está abierto, no hacer nada (Bootstrap lo maneja)
+        if (e.key === 'Escape' && !modalAbierto) {
+            e.preventDefault();
+            window.location.href = '{{ route("ventas.pedidos.index") }}';
+        }
+
+        // Agregar fila: Ctrl+Alt++ (Ctrl+Alt+=)
+        if (e.ctrlKey && e.altKey && (e.key === '+' || e.key === '=')) {
+            e.preventDefault();
+            document.getElementById('agregar-fila').click();
+        }
+
+        // Alternativa: Ctrl+Insert para agregar fila
+        if (e.ctrlKey && e.key === 'Insert') {
+            e.preventDefault();
+            document.getElementById('agregar-fila').click();
+        }
+
+        // Eliminar fila actual: Ctrl+Delete
+        if (e.ctrlKey && e.key === 'Delete') {
+            e.preventDefault();
+            const activeElement = document.activeElement;
+            const fila = activeElement?.closest('tr');
+            if (fila) {
+                const btnEliminar = fila.querySelector('.eliminar-fila');
+                if (btnEliminar) {
+                    btnEliminar.click();
+                }
+            }
+        }
+
+    });
+</script>
+
 </body>
 </html>
