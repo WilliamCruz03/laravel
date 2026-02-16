@@ -99,4 +99,16 @@ class ArticuloController extends Controller
         return redirect()->route('ventas.articulos.index')
                  ->with('success', 'Artículo eliminado exitosamente.');
     }
+
+
+
+    public function buscar(Request $request)
+    {
+        $termino = $request->get('q');
+        $articulos = Articulo::where('nombre', 'LIKE', "%{$termino}%")
+                            ->orWhere('descripcion', 'LIKE', "%{$termino}%")
+                            ->limit(10)
+                            ->get(['id', 'nombre', 'precio', 'stock']);
+        return response()->json($articulos);
+    }
 }

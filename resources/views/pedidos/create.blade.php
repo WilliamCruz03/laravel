@@ -95,12 +95,15 @@
                                     <tbody>
                                         <tr>
                                             <td>
-                                                <select name="detalles[0][articulo_id]" class="form-select articulo-select" required>
-                                                    <option value="">Seleccionar</option>
-                                                    @foreach($articulos as $articulo)
-                                                        <option value="{{ $articulo->id }}" data-precio="{{ $articulo->precio }}">{{ $articulo->nombre }}</option>
-                                                    @endforeach
-                                                </select>
+                                                <div style="position: relative;">
+                                                    <input type="text" 
+                                                        class="form-control articulo-busqueda" 
+                                                        placeholder="Buscar artículo..." 
+                                                        autocomplete="off"
+                                                        data-row="{{ $index ?? 0 }}">
+                                                    <input type="hidden" name="detalles[{{ $index ?? 0 }}][articulo_id]" class="articulo-id" value="">
+                                                    <div class="sugerencias-articulo list-group" style="position: absolute; z-index: 1000; width: 100%; display: none;"></div>
+                                                </div>
                                             </td>
                                             <td>
                                                 <input type="number" name="detalles[0][cantidad]" class="form-control cantidad" value="1" min="1" required>
@@ -139,17 +142,17 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let filaIndex = 1;
-        const articulosData = @json($articulos); // pasamos los artículos al JS
-
+        
         document.getElementById('agregar-fila').addEventListener('click', function() {
             const tbody = document.querySelector('#tabla-detalles tbody');
             const nuevaFila = document.createElement('tr');
             nuevaFila.innerHTML = `
                 <td>
-                    <select name="detalles[${filaIndex}][articulo_id]" class="form-select articulo-select" required>
-                        <option value="">Seleccionar</option>
-                        ${articulosData.map(a => `<option value="${a.id}" data-precio="${a.precio}">${a.nombre}</option>`).join('')}
-                    </select>
+                    <div style="position: relative;">
+                        <input type="text" class="form-control articulo-busqueda" placeholder="Buscar artículo..." autocomplete="off" data-row="${filaIndex}">
+                        <input type="hidden" name="detalles[${filaIndex}][articulo_id]" class="articulo-id" value="">
+                        <div class="sugerencias-articulo list-group" style="position: absolute; z-index: 1000; width: 100%; display: none;"></div>
+                    </div>
                 </td>
                 <td>
                     <input type="number" name="detalles[${filaIndex}][cantidad]" class="form-control cantidad" value="1" min="1" required>
@@ -168,17 +171,6 @@
             filaIndex++;
         });
 
-        // Evento para cuando se selecciona un artículo, cargar su precio
-        document.addEventListener('change', function(e) {
-            if (e.target.classList.contains('articulo-select')) {
-                const select = e.target;
-                const precio = select.selectedOptions[0]?.getAttribute('data-precio') || 0;
-                const fila = select.closest('tr');
-                fila.querySelector('.precio').value = precio;
-                calcularSubtotal(fila);
-                calcularTotal();
-            }
-        });
 
         // Evento para cuando cambia cantidad o precio
         document.addEventListener('input', function(e) {
@@ -234,6 +226,75 @@
                 toast.show();
                 toastElement.addEventListener('hidden.bs.toast', () => toastElement.remove());
             }
+
+
+            // ----- BÚSQUEDA DE ARTÍCULOS (delegada) -----
+            document.addEventListener('input', function(e) {
+                if (e.target.classList.contains('articulo-busqueda')) {
+                    const input = e.target;
+                    const termino = input.value.trim();
+                    const fila = input.closest('tr');
+                    const sugerenciasDiv = fila.querySelector('.sugerencias-articulo');
+                    const hiddenId = fila.querySelector('.articulo-id');
+
+                    if (termino === '') {
+                        hiddenId.value = '';
+                        sugerenciasDiv.style.display = 'none';
+                        return;
+                    }
+
+                    clearTimeout(input.timeoutId);
+                    input.timeoutId = setTimeout(() => {
+                        fetch(`/ventas/articulos/buscar?q=${encodeURIComponent(termino)}`)
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error(`Error HTTP: ${response.status}`);
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                sugerenciasDiv.innerHTML = '';
+                                if (data.length > 0) {
+                                    data.forEach(articulo => {
+                                        const item = document.createElement('a');
+                                        item.href = '#';
+                                        item.className = 'list-group-item list-group-item-action';
+                                        item.innerHTML = `<strong>${articulo.nombre}</strong> - $${articulo.precio} (Stock: ${articulo.stock})`;
+                                        item.addEventListener('click', function(e) {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            input.value = articulo.nombre;
+                                            hiddenId.value = articulo.id;
+                                            const precioInput = fila.querySelector('.precio');
+                                            if (precioInput) {
+                                                precioInput.value = articulo.precio;
+                                                precioInput.dispatchEvent(new Event('input', { bubbles: true }));
+                                            }
+                                            sugerenciasDiv.style.display = 'none';
+                                        });
+                                        sugerenciasDiv.appendChild(item);
+                                    });
+                                    sugerenciasDiv.style.display = 'block';
+                                } else {
+                                    sugerenciasDiv.style.display = 'none';
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error al buscar artículos:', error);
+                                mostrarToast('Error al cargar sugerencias', 'danger');
+                            });
+                    }, 300);
+                }
+            });
+
+            // Ocultar sugerencias al hacer clic fuera
+            document.addEventListener('click', function(e) {
+                if (!e.target.classList.contains('articulo-busqueda') && !e.target.closest('.sugerencias-articulo')) {
+                    document.querySelectorAll('.sugerencias-articulo').forEach(div => {
+                        div.style.display = 'none';
+                    });
+                }
+            });
     </script>
 
         <!-- Modal Nuevo Cliente -->

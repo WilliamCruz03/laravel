@@ -23,7 +23,7 @@ Route::prefix('ventas')->name('ventas.')->group(function () {
     })->name('dashboard');
     
     // Clientes
-    Route::controller(ClientesController::class)->prefix('clientes')->name('clientes.')->group(function () {
+        Route::controller(ClientesController::class)->prefix('clientes')->name('clientes.')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/crear', 'create')->name('create');
         Route::post('/', 'store')->name('store');
@@ -37,7 +37,10 @@ Route::prefix('ventas')->name('ventas.')->group(function () {
         Route::resource('articulos', ArticuloController::class)->names('articulos');
         Route::resource('pedidos', PedidoController::class)->names('pedidos');
         Route::post('/pedidos/{id}/estado', [PedidoController::class, 'updateEstado'])->name('pedidos.updateEstado');
+
+        //Busquedas AJAX
         Route::get('/clientes/buscar', [App\Http\Controllers\ClientesController::class, 'buscar'])->name('clientes.buscar');
+        Route::get('/articulos/buscar', [App\Http\Controllers\ArticuloController::class, 'buscar'])->name('articulos.buscar');
         
         // Cotizaciones
         Route::controller(CotizacionesController::class)->prefix('cotizaciones')->name('cotizaciones.')->group(function () {
