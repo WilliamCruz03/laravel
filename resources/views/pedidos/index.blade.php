@@ -10,8 +10,28 @@
 <body>
 
     <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
-    <!-- Los toasts se agregarán aquí dinámicamente -->
+        <!-- Los toasts se insertarán aquí dinámicamente -->
     </div>
+
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert" id="success-alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <script>
+        setTimeout(() => {
+            let alert = document.getElementById('success-alert');
+            if (alert) new bootstrap.Alert(alert).close();
+        }, 3000);
+    </script>
+@endif
+
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
 
     <nav class="nav-farmacia">
         <div class="container-fluid">
@@ -40,6 +60,13 @@
             </script>
         @endif
 
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
         <h1 class="mb-4">Listado de Pedidos</h1>
 
         <div class="table-responsive">
@@ -56,54 +83,70 @@
                 </thead>
                 <tbody>
                     @forelse($pedidos as $pedido)
-                    <tr>
-                        <td>{{ $pedido->id }}</td>
-                        <td>{{ $pedido->cliente->nombre ?? 'N/A' }}</td>
-                        <td>{{ $pedido->fecha }}</td>
-                        <td>${{ number_format($pedido->total, 2) }}</td>
-                            <td>
-                                <div class="estado-container">
-                                    <select class="form-select form-select-sm estado-select" data-id="{{ $pedido->id }}" style="width: auto;">
-                                        <option value="pendiente" {{ $pedido->estado == 'pendiente' ? 'selected' : '' }}>Pendiente</option>
-                                        <option value="despachado" {{ $pedido->estado == 'despachado' ? 'selected' : '' }}>Despachado</option>
-                                        <option value="en_camino" {{ $pedido->estado == 'en_camino' ? 'selected' : '' }}>En camino</option>
-                                        <option value="entregado" {{ $pedido->estado == 'entregado' ? 'selected' : '' }}>Entregado</option>
-                                        <option value="retrasado" {{ $pedido->estado == 'retrasado' ? 'selected' : '' }}>Retrasado</option>
-                                    </select>
-                                    
-                                    {{-- Badge que muestra el motivo si el estado es retrasado --}}
-                                    @if($pedido->estado == 'retrasado' && $pedido->motivo_retraso)
-                                        <span class="badge bg-warning text-dark motivo-badge mt-1" data-id="{{ $pedido->id }}">
-                                            Motivo: {{ $pedido->motivo_retraso }}
-                                        </span>
-                                    @endif
-                                    
-                                    {{-- Contenedor del input y botón para motivo (siempre existe pero oculto) --}}
-                                    <div class="motivo-container mt-1" style="display: none;">
-                                        <input type="text" class="form-control form-control-sm motivo-input" placeholder="Motivo del retraso" value="{{ $pedido->motivo_retraso }}">
-                                        <button class="btn btn-sm btn-primary mt-1 guardar-motivo" data-id="{{ $pedido->id }}">Guardar motivo</button>
+                        @php
+                            $estadosInmutables = ['entregado', 'cancelado'];
+                            $selectDisabled = in_array($pedido->estado, $estadosInmutables);
+                            $noEliminable = in_array($pedido->estado, ['pendiente', 'entregado']);
+                            $editDisabled = ($pedido->estado == 'entregado'); // O también podrías incluir cancelado si no se permite editar, pero ya lo manejas aparte.
+                            // Para editar, también podrías considerar cancelado como no editable:
+                            $editDisabled = in_array($pedido->estado, ['entregado', 'cancelado']);
+                        @endphp
+                            <tr>
+                                <td>{{ $pedido->id }}</td>
+                                <td>{{ $pedido->cliente->nombre ?? 'N/A' }}</td>
+                                <td>{{ $pedido->fecha }}</td>
+                                <td>${{ number_format($pedido->total, 2) }}</td>
+                                <td>
+                                    <div class="estado-container">
+                                        <select class="form-select form-select-sm estado-select" data-id="{{ $pedido->id }}" style="width: auto;" {{ $selectDisabled ? 'disabled' : '' }}>
+                                            <option value="pendiente" {{ $pedido->estado == 'pendiente' ? 'selected' : '' }}>Pendiente</option>
+                                            <option value="despachado" {{ $pedido->estado == 'despachado' ? 'selected' : '' }}>Despachado</option>
+                                            <option value="en_camino" {{ $pedido->estado == 'en_camino' ? 'selected' : '' }}>En camino</option>
+                                            <option value="entregado" {{ $pedido->estado == 'entregado' ? 'selected' : '' }}>Entregado</option>
+                                            <option value="retrasado" {{ $pedido->estado == 'retrasado' ? 'selected' : '' }}>Retrasado</option>
+                                            <option value="cancelado" {{ $pedido->estado == 'cancelado' ? 'selected' : '' }}>Cancelado</option>
+                                        </select>
+
+                                        @if($pedido->estado == 'retrasado' && $pedido->motivo_retraso)
+                                            <span class="badge bg-warning text-dark motivo-badge mt-1" data-id="{{ $pedido->id }}">
+                                                Motivo: {{ $pedido->motivo_retraso }}
+                                            </span>
+                                        @endif
+
+                                        <div class="motivo-container mt-1" style="display: none;">
+                                            <input type="text" class="form-control form-control-sm motivo-input" placeholder="Motivo del retraso" value="{{ $pedido->motivo_retraso }}">
+                                            <button class="btn btn-sm btn-primary mt-1 guardar-motivo" data-id="{{ $pedido->id }}">Guardar motivo</button>
+                                        </div>
                                     </div>
-                                </div>
-                            </td>
-                        <td class="text-center">
-                            <a href="{{ route('ventas.pedidos.edit', $pedido->id) }}" class="btn btn-sm btn-primary">Editar</a>
-                            <button type="button" class="btn btn-sm btn-danger" 
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#eliminarModal"
-                                    data-id="{{ $pedido->id }}">
-                                Eliminar
-                            </button>
-                            <a href="https://wa.me/{{ $pedido->cliente->telefono }}?text={{ urlencode('Su pedido #'.$pedido->id.' está '.$pedido->estado.($pedido->motivo_retraso ? ' (Motivo: '.$pedido->motivo_retraso.')' : '')) }}" target="_blank" class="btn btn-sm btn-success">WhatsApp</a>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="6" class="text-center py-4">
-                            <div class="alert alert-info mb-0">
-                                No hay pedidos registrados.
-                            </div>
-                        </td>
-                    </tr>
+                                </td>
+                                <td class="text-center">
+                                    <a href="{{ $editDisabled ? '#' : route('ventas.pedidos.edit', $pedido->id) }}"
+                                    class="btn btn-sm editar-btn {{ $editDisabled ? 'btn-secondary disabled' : 'btn-primary' }}"
+                                    data-href="{{ route('ventas.pedidos.edit', $pedido->id) }}"
+                                    {{ $editDisabled ? 'aria-disabled="true"' : '' }}
+                                    title="{{ $editDisabled ? 'No se puede editar un pedido ' . $pedido->estado : 'Editar pedido' }}">
+                                        Editar
+                                    </a>
+
+                                    <button type="button"
+                                            class="btn btn-sm eliminar-btn {{ $noEliminable ? 'btn-secondary' : 'btn-danger' }}"
+                                            {{ $noEliminable ? 'disabled' : '' }}
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#eliminarModal"
+                                            data-id="{{ $pedido->id }}"
+                                            title="{{ $noEliminable ? 'No se puede eliminar un pedido en estado ' . $pedido->estado : 'Eliminar pedido' }}">
+                                        Eliminar
+                                    </button>
+
+                                    <a href="https://wa.me/{{ $pedido->cliente->telefono }}?text={{ urlencode('Su pedido #'.$pedido->id.' está '.$pedido->estado.($pedido->motivo_retraso ? ' (Motivo: '.$pedido->motivo_retraso.')' : '')) }}" target="_blank" class="btn btn-sm btn-success">WhatsApp</a>
+                                </td>
+                            </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">
+                                            <div class="alert alert-info mb-0">No hay pedidos registrados.</div>
+                                        </td>
+                                    </tr>
                     @endforelse
                 </tbody>
             </table>
@@ -134,6 +177,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
     // Función para mostrar toasts
     function mostrarToast(mensaje, tipo = 'success') {
@@ -176,11 +220,61 @@
             });
         }
 
+        // Función para actualizar los botones según el estado
+        function actualizarBotones(fila, estado) {
+            // ----- SELECT de estado -----
+            const select = fila.querySelector('.estado-select');
+            const estadosInmutables = ['entregado', 'cancelado'];
+            if (estadosInmutables.includes(estado)) {
+                select.disabled = true;
+            } else {
+                select.disabled = false;
+            }
+
+            // ----- Botón Eliminar -----
+            const btnEliminar = fila.querySelector('.eliminar-btn');
+            const estadosNoEliminables = ['pendiente', 'entregado'];
+            const noEliminable = estadosNoEliminables.includes(estado);
+            
+            if (btnEliminar) {
+                if (noEliminable) {
+                    btnEliminar.classList.remove('btn-danger');
+                    btnEliminar.classList.add('btn-secondary');
+                    btnEliminar.disabled = true;
+                    btnEliminar.title = 'No se puede eliminar un pedido en estado ' + estado;
+                } else {
+                    btnEliminar.classList.remove('btn-secondary');
+                    btnEliminar.classList.add('btn-danger');
+                    btnEliminar.disabled = false;
+                    btnEliminar.title = 'Eliminar pedido';
+                }
+            }
+
+            // ----- Botón Editar -----
+            const btnEditar = fila.querySelector('.editar-btn');
+            const editDisabled = ['entregado', 'cancelado'].includes(estado);
+            
+            if (btnEditar) {
+                const hrefOriginal = btnEditar.dataset.href;
+                if (editDisabled) {
+                    btnEditar.classList.remove('btn-primary');
+                    btnEditar.classList.add('btn-secondary', 'disabled');
+                    btnEditar.href = '#';
+                    btnEditar.setAttribute('aria-disabled', 'true');
+                    btnEditar.title = 'No se puede editar un pedido ' + estado;
+                } else {
+                    btnEditar.classList.remove('btn-secondary', 'disabled');
+                    btnEditar.classList.add('btn-primary');
+                    btnEditar.href = hrefOriginal;
+                    btnEditar.removeAttribute('aria-disabled');
+                    btnEditar.title = 'Editar pedido';
+                }
+            }
+        }
+
         // Función principal para actualizar estado vía AJAX
         function actualizarEstado(pedidoId, estado, motivo, fila) {
-            // Construir objeto de datos dinámicamente
             let data = { estado: estado };
-            // Solo incluir motivo si es diferente de null (para evitar sobrescribir con null)
             if (motivo !== null) {
                 data.motivo_retraso = motivo;
             }
@@ -202,9 +296,11 @@
                     const motivoInput = motivoContainer.querySelector('.motivo-input');
                     const badge = estadoContainer.querySelector('.motivo-badge');
 
+                    // Actualizar botones según el nuevo estado
+                    actualizarBotones(fila, estado);
+
                     if (estado === 'retrasado') {
                         if (motivo) {
-                            // Actualizar o crear badge
                             if (badge) {
                                 badge.textContent = 'Motivo: ' + motivo;
                             } else {
@@ -214,15 +310,12 @@
                                 newBadge.textContent = 'Motivo: ' + motivo;
                                 estadoContainer.appendChild(newBadge);
                             }
-                            // Ocultar input después de guardar
                             motivoContainer.style.display = 'none';
                         } else {
-                            // Si no hay motivo, mostrar input para ingresarlo
                             motivoContainer.style.display = 'block';
                             motivoInput.value = '';
                         }
                     } else {
-                        // Si el estado no es retrasado, ocultar input y badge (el motivo persiste en BD)
                         motivoContainer.style.display = 'none';
                         if (badge) {
                             badge.remove();
@@ -252,16 +345,12 @@
                 const badge = estadoContainer.querySelector('.motivo-badge');
 
                 if (nuevoEstado === 'retrasado') {
-                    // Mostrar el input para ingresar motivo
                     motivoContainer.style.display = 'block';
-                    // Precargar motivo existente (desde badge o desde el input)
                     const motivoExistente = badge ? badge.textContent.replace('Motivo: ', '') : motivoInput.value;
                     motivoInput.value = motivoExistente || '';
                     // No enviar todavía, esperar a que el usuario guarde
                 } else {
-                    // Ocultar input si estaba visible
                     motivoContainer.style.display = 'none';
-                    // Enviar actualización sin motivo (no se incluye para no sobrescribir)
                     actualizarEstado(pedidoId, nuevoEstado, null, fila);
                 }
             });

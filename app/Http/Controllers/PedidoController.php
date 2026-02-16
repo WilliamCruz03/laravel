@@ -110,7 +110,21 @@ class PedidoController extends Controller
      */
     public function edit($id)
     {
+
+        $pedido = Pedido::findOrFail($id);
+        //no se puede actualizar un pedido entregado o cancelado
+        if (in_array($pedido->estado, ['entregado', 'cancelado'])) {
+            return redirect()->route('ventas.pedidos.index')
+                             ->with('error', 'No se puede editar un pedido entregado o cancelado.');
+        }
+
         $pedido = Pedido::with('detalles.articulo')->findOrFail($id);
+        
+        // Si el estado es 'completado' no se puede editar
+        if ($pedido->estado === 'completado') {
+            return redirect()->route('ventas.pedidos.index')
+                             ->with('error', 'No se puede editar un pedido completado.');
+        }
         $clientes = Cliente::all();
         $articulos = Articulo::all();
 
@@ -124,31 +138,36 @@ class PedidoController extends Controller
     {
         $pedido = Pedido::findOrFail($id);
 
+        // No se puede actualizar si está entregado o cancelado
+        if (in_array($pedido->estado, ['entregado', 'cancelado'])) {
+            return redirect()->route('ventas.pedidos.index')
+                            ->with('error', 'No se puede actualizar un pedido entregado o cancelado.');
+        }
+
         // Validar datos principales
         $validated = $request->validate([
             'cliente_id' => 'required|exists:clientes,id',
             'fecha'      => 'required|date',
-            'estado' => 'required|in:pendiente,despachado,en_camino,entregado,retrasado',
+            'estado'     => 'required|in:pendiente,despachado,en_camino,entregado,retrasado,cancelado',
             'motivo_retraso' => 'nullable|string|max:255'
         ]);
 
-        $pedido->estado = $request->estado;
+        // Asignar campos al pedido
+        $pedido->cliente_id = $validated['cliente_id'];
+        $pedido->fecha = $validated['fecha'];
+        $pedido->estado = $validated['estado'];
         if ($request->estado == 'retrasado') {
-            $pedido->motivo_retraso = $request->motivo_retraso;
+            $pedido->motivo_retraso = $validated['motivo_retraso'];
         } else {
             $pedido->motivo_retraso = null;
         }
-        $pedido->save();
-
-            return redirect()->route('ventas.pedidos.index')
-                     ->with('success', 'Pedido actualizado correctamente.');
-        
 
         $detalles = $request->input('detalles', []);
         if (empty($detalles)) {
             return back()->withErrors(['detalles' => 'Debe agregar al menos un artículo al pedido.'])->withInput();
         }
 
+        // Validar cada detalle
         foreach ($detalles as $index => $detalle) {
             $request->validate([
                 "detalles.{$index}.articulo_id"   => 'required|exists:articulos,id',
@@ -159,12 +178,8 @@ class PedidoController extends Controller
 
         DB::beginTransaction();
         try {
-            // Actualizar datos del pedido
-            $pedido->update([
-                'cliente_id' => $validated['cliente_id'],
-                'fecha'      => $validated['fecha'],
-                'estado'     => $validated['estado'],
-            ]);
+            // Guardar el pedido (para tener el ID en los detalles)
+            $pedido->save();
 
             // Eliminar detalles antiguos
             $pedido->detalles()->delete();
@@ -182,7 +197,9 @@ class PedidoController extends Controller
                 $totalPedido += $subtotal;
             }
 
-            $pedido->update(['total' => $totalPedido]);
+            // Actualizar total del pedido
+            $pedido->total = $totalPedido;
+            $pedido->save();
 
             DB::commit();
 
@@ -199,8 +216,14 @@ class PedidoController extends Controller
         try {
             $pedido = Pedido::findOrFail($id);
 
+            // No permitir cambios si el pedido ya está entregado o cancelado
+            if (in_array($pedido->estado, ['entregado', 'cancelado'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede modificar el estado de un pedido entregado o cancelado.'], 403);
+            }
             $request->validate([
-                'estado' => 'required|in:pendiente,despachado,en_camino,entregado,retrasado',
+                'estado' => 'required|in:pendiente,despachado,en_camino,entregado,retrasado,cancelado',
                 'motivo_retraso' => 'nullable|string|max:255'
             ]);
 
@@ -219,5 +242,20 @@ class PedidoController extends Controller
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
+    }
+
+    public function destroy($id)
+    {
+        $pedido = Pedido::findOrFail($id);
+
+        // Si el estado es 'pendiente' o 'entregado' no se puede eliminar (cancelado si)
+        if (in_array($pedido->estado, ['pendiente', 'entregado'])) {
+            return redirect()->route('ventas.pedidos.index')
+                             ->with('error', 'No se puede eliminar un pedido pendiente.');
+        }
+                
+        $pedido->delete();
+        return redirect()->route('ventas.pedidos.index')
+                            ->with('success','Pedido eliminado Correctamente.');
     }
 }

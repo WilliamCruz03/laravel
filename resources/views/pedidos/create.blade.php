@@ -40,18 +40,20 @@
                             @csrf
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    <label for="cliente_id" class="form-label fw-bold">Cliente <span class="text-danger">*</span></label>
+                                    <label for="cliente_busqueda" class="form-label fw-bold">Cliente <span class="text-danger">*</span></label>
                                     <div class="input-group">
-                                        <select name="cliente_id" id="cliente_id" class="form-select @error('cliente_id') is-invalid @enderror" required>
-                                            <option value="">Seleccionar cliente</option>
-                                            @foreach($clientes as $cliente)
-                                                <option value="{{ $cliente->id }}" {{ old('cliente_id') == $cliente->id ? 'selected' : '' }}>{{ $cliente->nombre }}</option>
-                                            @endforeach
-                                        </select>
+                                        <input type="text" 
+                                            class="form-control @error('cliente_id') is-invalid @enderror" 
+                                            id="cliente_busqueda" 
+                                            placeholder="Buscar cliente por nombre, email o teléfono..." 
+                                            value="{{ old('cliente_nombre') }}"
+                                            autocomplete="off">
+                                        <input type="hidden" name="cliente_id" id="cliente_id" value="{{ old('cliente_id') }}">
                                         <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoCliente">
                                             + Nuevo
                                         </button>
                                     </div>
+                                    <div id="sugerencias-cliente" class="list-group mt-1" style="position: absolute; z-index: 1000; max-width: 400px; display: none;"></div>
                                     @error('cliente_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -351,12 +353,9 @@
                 })
                 .then(data => {
                     if (data.success) {
-                        // Agregar nuevo cliente al select y seleccionarlo
-                        const option = document.createElement('option');
-                        option.value = data.cliente.id;
-                        option.text = data.cliente.nombre;
-                        option.selected = true;
-                        selectCliente.appendChild(option);
+                        // Agregar nuevo cliente al input y seleccionarlo
+                        inputBusqueda.value = data.cliente.nombre;
+                        hiddenClienteId.value = data.cliente.id;
 
                         // Limpiar formulario del modal
                         formNuevoCliente.reset();
@@ -415,54 +414,115 @@
                 modal.show();
             }
         });
-    });
-    </script>
 
-    <script>
-    // Atajos de Teclado
-    document.addEventListener('keydown', function(e) {
-        // Detectar si el modal de nuevo cliente está abierto
-        const modalNuevoCliente = document.getElementById('modalNuevoCliente');
-        const modalAbierto = modalNuevoCliente?.classList.contains('show');
+        // ----- BÚSQUEDA DE CLIENTES -----
+        const inputBusqueda = document.getElementById('cliente_busqueda');
+        const hiddenClienteId = document.getElementById('cliente_id');
+        const sugerenciasContainer = document.getElementById('sugerencias-cliente');
+        let timeoutId;
 
-        // Guardar con Ctrl+Enter (solo si no hay modal abierto)
-        if (e.ctrlKey && e.key === 'Enter' && !modalAbierto) {
-            e.preventDefault();
-            document.querySelector('form').submit();
-        }
+        inputBusqueda.addEventListener('input', function() {
+            const termino = this.value.trim();
+            
+            if (termino === '') {
+                hiddenClienteId.value = '';
+                sugerenciasContainer.style.display = 'none';
+                return;
+            }
 
-        // Cancelar con Escape: si el modal está abierto, no hacer nada (Bootstrap lo maneja)
-        if (e.key === 'Escape' && !modalAbierto) {
-            e.preventDefault();
-            window.location.href = '{{ route("ventas.pedidos.index") }}';
-        }
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                fetch(`/ventas/clientes/buscar?q=${encodeURIComponent(termino)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        sugerenciasContainer.innerHTML = '';
+                        if (data.length > 0) {
+                            data.forEach(cliente => {
+                                const item = document.createElement('a');
+                                item.href = '#';
+                                item.className = 'list-group-item list-group-item-action';
+                                item.innerHTML = `<strong>${cliente.nombre}</strong><br><small>${cliente.email} | ${cliente.telefono || 'Sin teléfono'}</small>`;
+                                item.addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    inputBusqueda.value = cliente.nombre;
+                                    hiddenClienteId.value = cliente.id;
+                                    sugerenciasContainer.style.display = 'none';
+                                });
+                                sugerenciasContainer.appendChild(item);
+                            });
+                            sugerenciasContainer.style.display = 'block';
+                        } else {
+                            sugerenciasContainer.style.display = 'none';
+                        }
+                    });
+            }, 300);
+        });
 
-        // Agregar fila: Ctrl+Alt++ (Ctrl+Alt+=)
-        if (e.ctrlKey && e.altKey && (e.key === '+' || e.key === '=')) {
-            e.preventDefault();
-            document.getElementById('agregar-fila').click();
-        }
+        // Ocultar sugerencias al hacer clic fuera
+        document.addEventListener('click', function(e) {
+            if (!inputBusqueda.contains(e.target) && !sugerenciasContainer.contains(e.target)) {
+                sugerenciasContainer.style.display = 'none';
+            }
+        });
 
-        // Alternativa: Ctrl+Insert para agregar fila
-        if (e.ctrlKey && e.key === 'Insert') {
-            e.preventDefault();
-            document.getElementById('agregar-fila').click();
-        }
+        // Si hay un valor antiguo (por ejemplo, después de un error de validación), mostrarlo
+        if (hiddenClienteId.value) {
+            fetch(`/ventas/clientes/buscar?q=${hiddenClienteId.value}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        inputBusqueda.value = data[0].nombre;
+                    }
+                })
+                }
+        });
+        </script>
 
-        // Eliminar fila actual: Ctrl+Delete
-        if (e.ctrlKey && e.key === 'Delete') {
-            e.preventDefault();
-            const activeElement = document.activeElement;
-            const fila = activeElement?.closest('tr');
-            if (fila) {
-                const btnEliminar = fila.querySelector('.eliminar-fila');
-                if (btnEliminar) {
-                    btnEliminar.click();
+        <script>
+        // Atajos de Teclado
+        document.addEventListener('keydown', function(e) {
+            // Detectar si el modal de nuevo cliente está abierto
+            const modalNuevoCliente = document.getElementById('modalNuevoCliente');
+            const modalAbierto = modalNuevoCliente?.classList.contains('show');
+
+            // Guardar con Ctrl+Enter (solo si no hay modal abierto)
+            if (e.ctrlKey && e.key === 'Enter' && !modalAbierto) {
+                e.preventDefault();
+                document.querySelector('form').submit();
+            }
+
+            // Cancelar con Escape: si el modal está abierto, no hacer nada (Bootstrap lo maneja)
+            if (e.key === 'Escape' && !modalAbierto) {
+                e.preventDefault();
+                window.location.href = '{{ route("ventas.pedidos.index") }}';
+            }
+
+            // Agregar fila: Ctrl+Alt++ (Ctrl+Alt+=)
+            if (e.ctrlKey && e.altKey && (e.key === '+' || e.key === '=')) {
+                e.preventDefault();
+                document.getElementById('agregar-fila').click();
+            }
+
+            // Alternativa: Ctrl+Insert para agregar fila
+            if (e.ctrlKey && e.key === 'Insert') {
+                e.preventDefault();
+                document.getElementById('agregar-fila').click();
+            }
+
+            // Eliminar fila actual: Ctrl+Delete
+            if (e.ctrlKey && e.key === 'Delete') {
+                e.preventDefault();
+                const activeElement = document.activeElement;
+                const fila = activeElement?.closest('tr');
+                if (fila) {
+                    const btnEliminar = fila.querySelector('.eliminar-fila');
+                    if (btnEliminar) {
+                        btnEliminar.click();
+                    }
                 }
             }
-        }
 
-    });
+        });
 </script>
 
 </body>

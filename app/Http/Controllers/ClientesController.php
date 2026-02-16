@@ -90,4 +90,15 @@ class ClientesController extends Controller
         return redirect()->route('ventas.clientes.index')
                         ->with('success', 'Cliente eliminado correctamente.');
     }
+
+    public function buscar(Request $request)
+    {
+        $termino = $request->get('q');
+        $clientes = Cliente::where('nombre', 'LIKE', "%{$termino}%")
+                            ->orWhere('email', 'LIKE', "%{$termino}%")
+                            ->orWhere('telefono', 'LIKE', "%{$termino}%")
+                            ->limit(10)
+                            ->get(['id', 'nombre', 'email', 'telefono']);
+        return response()->json($clientes);
+    }
 }
