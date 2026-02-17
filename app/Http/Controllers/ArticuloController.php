@@ -104,7 +104,7 @@ class ArticuloController extends Controller
 
 
     public function buscar(Request $request)
-{
-    return response()->json([['id' => 1, 'nombre' => 'Prueba', 'precio' => 10, 'stock' => 5]]);
-}
+    {
+        dd('Llegó al método buscar');
+    }
 }

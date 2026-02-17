@@ -258,4 +258,9 @@ class PedidoController extends Controller
         return redirect()->route('ventas.pedidos.index')
                             ->with('success','Pedido eliminado Correctamente.');
     }
+
+    public function test()
+{
+    return response()->json(['ok' => true]);
+}
 }

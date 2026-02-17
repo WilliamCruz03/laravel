@@ -41,6 +41,7 @@ Route::prefix('ventas')->name('ventas.')->group(function () {
         //Busquedas AJAX
         Route::get('/clientes/buscar', [App\Http\Controllers\ClientesController::class, 'buscar'])->name('clientes.buscar');
         Route::get('/articulos/buscar', [App\Http\Controllers\ArticuloController::class, 'buscar'])->name('articulos.buscar');
+        Route::get('/articulos/test', [App\Http\Controllers\ArticuloController::class, 'test']);
         
         // Cotizaciones
         Route::controller(CotizacionesController::class)->prefix('cotizaciones')->name('cotizaciones.')->group(function () {
