@@ -84,10 +84,11 @@
                 <tbody>
                     @forelse($pedidos as $pedido)
                         @php
+                            $estadosNoEliminables = ['pendiente', 'entregado'];
                             $estadosInmutables = ['entregado', 'cancelado'];
                             $selectDisabled = in_array($pedido->estado, $estadosInmutables);
-                            $noEliminable = in_array($pedido->estado, ['pendiente', 'entregado']);
-                            $editDisabled = ($pedido->estado == 'entregado'); // O también podrías incluir cancelado si no se permite editar, pero ya lo manejas aparte.
+                            $noEliminable = in_array($pedido->estado, $estadosNoEliminables);
+                            $editDisabled = in_array($pedido->estado, ['entregado', 'cancelado']); // O también podrías incluir cancelado si no se permite editar, pero ya lo manejas aparte.
                             // Para editar, también podrías considerar cancelado como no editable:
                             $editDisabled = in_array($pedido->estado, ['entregado', 'cancelado']);
                         @endphp

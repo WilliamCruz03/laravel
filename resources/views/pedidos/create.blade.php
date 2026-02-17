@@ -248,7 +248,7 @@
                         fetch(`/ventas/articulos/buscar?q=${encodeURIComponent(termino)}`)
                             .then(response => {
                                 if (!response.ok) {
-                                    throw new Error(`Error HTTP: ${response.status}`);
+                                    return response.text().then(text => { throw new Error(text) });
                                 }
                                 return response.json();
                             })
@@ -280,8 +280,8 @@
                                 }
                             })
                             .catch(error => {
-                                console.error('Error al buscar artículos:', error);
-                                mostrarToast('Error al cargar sugerencias', 'danger');
+                                console.error('Error al buscar artículos:', error.message);
+                                mostrarToast('Error: ' + error.message, 'danger');
                             });
                     }, 300);
                 }

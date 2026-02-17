@@ -13,9 +13,12 @@ class Articulo extends Model
         'stock'
     ];
 
+    public $timestamps = false;
+
     // Relación con DetallePedido (un artículo puede estar en muchos detalles)
     public function detalles()
     {
         return $this->hasMany(DetallePedido::class);
     }
+
 }
